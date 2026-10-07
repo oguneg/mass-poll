@@ -1,0 +1,46 @@
+# Run the tests on every push; deploy main to the VPS (https://poll.ogun.se) when they pass.
+# The DEPLOY_SSH_KEY secret is a key that can only run deploy/update.sh on the server
+# (restricted in ~/.ssh/authorized_keys with command="...", so it cannot open a shell).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Deploy to VPS
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "::warning::DEPLOY_SSH_KEY is not set, skipping deploy"
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo '57.129.169.251 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJa4Zyg+N/pp0ZaQ2lYOnP5LQGwd2YbGcjBS0ztlxcwE' > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes debian@57.129.169.251
+      - name: Check site
+        run: curl -fsS --retry 5 --retry-delay 3 --retry-all-errors https://poll.ogun.se/healthz
