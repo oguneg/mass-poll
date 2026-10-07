@@ -113,9 +113,21 @@ export function createApp({
     return poll;
   }
 
-  function progress(poll, voterId) {
-    const { c } = db.prepare('SELECT COUNT(*) AS c FROM votes WHERE poll_id = ? AND voter_id = ?').get(poll.id, voterId);
-    return { votes: c, min: poll.min_votes, unlocked: c >= poll.min_votes };
+  // How far along this voter is: votes, whether they count yet, and how sure we are of their own
+  // ranking (confidence 0..1, the answers worth aiming for, and whether more answers stopped helping).
+  function progress(poll, voterId, state = stats.personalState(poll.id, voterId)) {
+    return {
+      votes: state.votes,
+      min: poll.min_votes,
+      unlocked: state.votes >= poll.min_votes,
+      confidence: state.confidence,
+      target: state.target,
+      settled: state.settled,
+      // The voter's ranking so far, for the live table on the voting screen.
+      ranking: stats
+        .personal(poll.id, voterId, state)
+        .ranking.map((r) => ({ key: r.key, score: r.score, games: r.games, unknown: r.unknown })),
+    };
   }
 
   function unknownKeys(poll, voterId) {
@@ -128,7 +140,7 @@ export function createApp({
       .map((r) => r.key);
   }
 
-  function nextPair(poll, voterId) {
+  function nextPair(poll, voterId, state) {
     const rows = db.prepare('SELECT item_a, item_b FROM votes WHERE poll_id = ? AND voter_id = ?').all(poll.id, voterId);
     const seen = new Set();
     const itemCounts = new Map();
@@ -149,6 +161,8 @@ export function createApp({
       itemCounts,
       unknown,
       totalVotes: snap.totals.votes,
+      // Once they have met every option, ask what is least settled in THEIR OWN ranking.
+      personal: state.votes >= Math.ceil(state.known / 2) ? { prob: state.model.prob } : null,
     });
     if (!pair) return null;
     const byId = new Map(poll.items.map((i) => [i.id, i]));
@@ -213,7 +227,8 @@ export function createApp({
 
     if (action === 'next' && method === 'GET') {
       const voterId = voterFor(req, res);
-      return json(res, 200, { pair: nextPair(poll, voterId), progress: progress(poll, voterId) });
+      const state = stats.personalState(poll.id, voterId);
+      return json(res, 200, { pair: nextPair(poll, voterId, state), progress: progress(poll, voterId, state) });
     }
 
     if (action === 'votes' && method === 'POST') {
@@ -258,10 +273,11 @@ export function createApp({
 
     if (action === 'results' && method === 'GET') {
       const voterId = voterFor(req, res);
-      const prog = progress(poll, voterId);
+      const state = stats.personalState(poll.id, voterId);
+      const prog = progress(poll, voterId, state);
       if (!prog.unlocked) throw new HttpError(403, 'locked', { progress: prog });
       if (url.searchParams.get('scope') === 'me') {
-        return json(res, 200, { scope: 'me', progress: prog, ...stats.personal(poll.id, voterId) });
+        return json(res, 200, { scope: 'me', progress: prog, ...stats.personal(poll.id, voterId, state) });
       }
       const s = stats.snapshot(poll.id, { fresh: true });
       return json(res, 200, {

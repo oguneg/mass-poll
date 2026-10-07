@@ -67,7 +67,7 @@ function gaussian(rng) {
 }
 
 // Average chance of beating each other item: an easy-to-read 0..1 preference score.
-function scoresOf(theta, n) {
+export function scoresOf(theta, n) {
   const out = new Float64Array(n);
   if (n < 2) return out.fill(0.5);
   for (let i = 0; i < n; i++) {
@@ -131,4 +131,33 @@ export function summarize(theta, cov, n, { draws = 400, seed = 1 } = {}) {
       rankHi: Math.round(percentile(r, 0.95)),
     };
   });
+}
+
+// Standard normal CDF (Abramowitz & Stegun 26.2.17, error < 1e-7).
+export function normalCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp((-z * z) / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
+// Probability that item i truly ranks above item j, given the fit's uncertainty.
+export function orderProb(theta, cov, n, i, j) {
+  const v = cov[i * n + i] + cov[j * n + j] - 2 * cov[i * n + j];
+  return normalCdf((theta[i] - theta[j]) / Math.sqrt(Math.max(v, 1e-12)));
+}
+
+// How sure the fit is about the whole ordering, 0..1: the average chance that a pair of items is
+// in the right order, rescaled so 0 = coin flips (no information) and 1 = every pair certain.
+export function orderConfidence(theta, cov, n) {
+  if (n < 2) return 0;
+  let sum = 0;
+  let pairs = 0;
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      const p = orderProb(theta, cov, n, i, j);
+      sum += Math.max(p, 1 - p);
+      pairs++;
+    }
+  return Math.max(0, 2 * (sum / pairs) - 1);
 }

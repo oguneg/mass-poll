@@ -1,6 +1,7 @@
 // Turns raw vote rows into the numbers the UI and scheduler need.
 
-import { fitBT, summarize } from './rating.js';
+import { fitBT, summarize, orderConfidence } from './rating.js';
+import { personalModel } from './personal.js';
 import { pairKey } from './scheduler.js';
 
 // A voter's influence is capped so someone voting 300 times cannot outweigh
@@ -108,7 +109,10 @@ export function createStats(db, { maxAgeMs = 3000 } = {}) {
       items,
       thetaById,
       pairCounts,
-      totals: { votes: votes.length, voters, tieRate: votes.length ? ties / votes.length : 0 },
+      totals: {
+        votes: votes.length, voters, tieRate: votes.length ? ties / votes.length : 0,
+        confidence: orderConfidence(theta, cov, items.length),
+      },
       ranking: rows,
       pairs: pairs.map((p) => ({
         a: keyOf.get(p.a), b: keyOf.get(p.b), n: p.n, aWins: p.aWins, bWins: p.bWins, ties: p.ties,
@@ -130,37 +134,46 @@ export function createStats(db, { maxAgeMs = 3000 } = {}) {
     return snap;
   }
 
-  // One voter's own ranking: plain share of points earned, no model needed.
-  function personal(pollId, voterId) {
+  // One voter's own model: their ranking, how sure we are of it, and when more answers stop helping.
+  // Options they marked "don't know" are left out, so they can't drag the confidence down.
+  const SETTLE_WINDOW = 8; // answers
+  const SETTLE_GAIN = 0.03; // less than 3 points of confidence gained over the window
+  function personalState(pollId, voterId) {
     const items = db.prepare('SELECT * FROM items WHERE poll_id = ? ORDER BY position').all(pollId);
-    const votes = db
-      .prepare('SELECT item_a, item_b, result FROM votes WHERE poll_id = ? AND voter_id = ?')
+    const rows = db
+      .prepare('SELECT item_a AS a, item_b AS b, result FROM votes WHERE poll_id = ? AND voter_id = ? ORDER BY id')
       .all(pollId, voterId);
-    const tally = new Map(items.map((it) => [it.id, { pts: 0, games: 0 }]));
-    for (const v of votes) {
-      const a = tally.get(v.item_a);
-      const b = tally.get(v.item_b);
-      a.games++;
-      b.games++;
-      if (v.result === 'a') a.pts += 1;
-      else if (v.result === 'b') b.pts += 1;
-      else (a.pts += 0.5, (b.pts += 0.5));
-    }
     const unknown = new Set(
       db.prepare('SELECT item_id FROM unknowns WHERE poll_id = ? AND voter_id = ?').all(pollId, voterId).map((r) => r.item_id),
     );
-    const rows = items.map((it) => {
-      const t = tally.get(it.id);
-      return {
-        key: it.key, name: it.name, short: it.short, native: it.native, color: it.color, image: it.image,
-        score: t.games ? t.pts / t.games : null,
-        games: t.games,
-        unknown: unknown.has(it.id),
-      };
-    });
-    rows.sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || y.games - x.games);
-    return { votes: votes.length, ranking: rows };
+    const known = items.filter((it) => !unknown.has(it.id)).map((it) => it.id);
+    const model = personalModel(known, rows);
+    // A sorting-style estimate of the answers needed for a settled ranking: n * log2(n).
+    // Measured in scripts/simulate-confidence.js: 8 items ~24, 12 ~43, 16 ~64, 24 ~110.
+    const target = known.length > 1 ? Math.ceil(known.length * Math.log2(known.length)) : 0;
+    let gain = null;
+    if (rows.length >= SETTLE_WINDOW * 2) {
+      gain = model.confidence - personalModel(known, rows.slice(0, -SETTLE_WINDOW)).confidence;
+    }
+    const settled = gain !== null && gain < SETTLE_GAIN && model.confidence >= 0.4;
+    return { items, rows, unknown, known: known.length, model, votes: rows.length, confidence: model.confidence, target, settled };
   }
 
-  return { snapshot, personal };
+  // The voter's ranking as the model sees it (not a plain win count: beating strong options counts more).
+  function personal(pollId, voterId, state = personalState(pollId, voterId)) {
+    const ranking = state.items.map((it) => {
+      const games = state.model.played.get(it.id) || 0;
+      return {
+        key: it.key, name: it.name, short: it.short, native: it.native, color: it.color, image: it.image,
+        score: games ? (state.model.scores.get(it.id) ?? null) : null,
+        games,
+        unknown: state.unknown.has(it.id),
+      };
+    });
+    ranking.sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || y.games - x.games);
+    return { votes: state.votes, confidence: state.confidence, target: state.target, settled: state.settled, ranking };
+  }
+
+  return { snapshot, personal, personalState };
 }
+

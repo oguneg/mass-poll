@@ -40,7 +40,7 @@ test('the Sweden poll is seeded with eight parties', async () => {
   assert.deepEqual(list.body.polls.map((p) => p.slug), ['sweden-parties', 'breaking-bad-universe', 'pizza-toppings', 'programming-languages']);
   assert.equal(list.body.polls[1].items, 16);
   assert.equal(list.body.polls[0].preview.length, 6);
-  assert.deepEqual(poll.body.progress, { votes: 0, min: 10, unlocked: false });
+  assert.deepEqual(poll.body.progress, { votes: 0, min: 10, unlocked: false, confidence: 0, target: 24, settled: false, ranking: poll.body.progress.ranking });
 });
 
 test('voting flow: ten votes unlock results, duplicates and unknowns are rejected', async () => {

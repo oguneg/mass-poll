@@ -71,7 +71,7 @@ function drawTile(ctx, item, logo, x, cy, size) {
 }
 
 // mine: personal ranking rows (score desc, unrated last); crowd: crowd ranking rows with .rank.
-export async function drawCard({ poll, mine, crowd, link }) {
+export async function drawCard({ poll, mine, crowd, link, confidence = null }) {
   const crowdRank = new Map(crowd.map((r) => [r.key, r.rank]));
   const rated = mine.filter((r) => r.score != null);
   const shown = (rated.length >= 2 ? rated : mine).slice(0, MAX_ROWS);
@@ -117,7 +117,7 @@ export async function drawCard({ poll, mine, crowd, link }) {
   // column headers
   ctx.font = `800 34px ${FONT}`;
   ctx.fillStyle = '#7da2ff';
-  ctx.fillText('MY RANKING', LEFT_X, 236);
+  ctx.fillText(confidence == null ? 'MY RANKING' : `MY RANKING · ${Math.round(confidence * 100)}% SURE`, LEFT_X, 236);
   ctx.fillStyle = '#e8c860';
   ctx.textAlign = 'right';
   ctx.fillText('THE CROWD', RIGHT_X + COL_W, 236);

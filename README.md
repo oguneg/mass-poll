@@ -27,6 +27,13 @@ For local development with throwaway data, put `DB_PATH=data/dev.db` in `.env.de
 - **Rating** (`server/rating.js`): Bradley-Terry with a weak prior, Newton fit; ties are half a win each.
   Score = average chance to beat another option; 90% intervals for score and rank come from posterior draws.
   A voter's weight is capped (`1/sqrt(n)` beyond 20 votes) so heavy voters can't dominate.
+- **Confidence** (`server/personal.js`, `server/rating.js`): each voter's own answers are fitted separately.
+  Confidence = the average chance that a pair of options is in the right order, rescaled so 0% means coin flips
+  and 100% means every pair is certain. It is shown live while voting, with a live table of your ranking so far.
+  After the first answers, the scheduler asks the pairs that are most unsettled in *your own* ranking.
+  `scripts/simulate-confidence.js` checks the number against synthetic voters with a known true order: the
+  claimed confidence stays at or below the real accuracy, and the curve flattens at about n·log2(n) answers
+  (8 options ~24, 12 ~43, 16 ~64, 24 ~110). A ranking is called "settled" when the last 8 answers added under 3 points.
 - **Results** (`server/stats.js`): ranking, head-to-head matrix, rock-paper-scissors cycles, per-item
   "don't know" rate, and each voter's own ranking.
 

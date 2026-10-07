@@ -42,6 +42,7 @@ const chip = (it) =>
     ? h('span', { class: 'chip logo' }, h('img', { src: it.image, alt: '', loading: 'lazy', draggable: 'false' }))
     : h('span', { class: /[^ -~]/.test(it.short) ? 'chip emoji' : 'chip', style: `background:${it.color};color:${textOn(it.color)}` }, it.short);
 const pct = (x) => Math.round(x * 100);
+const confidenceWord = (c, settled) => (settled ? 'settled' : c < 0.35 ? 'rough guess' : c < 0.6 ? 'taking shape' : c < 0.8 ? 'solid' : 'very solid');
 
 const coarsePointer = matchMedia('(pointer: coarse)').matches;
 
@@ -142,16 +143,81 @@ async function vote(p, prog0) {
   const progressEl = h('div', { class: 'progress' }, h('div', { class: 'bar' }, barFill), count);
   const banner = h('div');
 
+  // Live confidence meter: how sure we are of YOUR ranking, rising as you answer.
+  const confFill = h('i');
+  const confText = h('span', { class: 'conf-text' });
+  const confHint = h('span', { class: 'conf-hint muted' });
+  const confEl = h('div', { class: 'conf', role: 'status' },
+    h('div', { class: 'conf-row' }, h('span', { class: 'conf-label' }, 'Ranking confidence'), confText),
+    h('div', { class: 'bar thin' }, confFill),
+    confHint);
+
+  // Live ranking table: your ranking so far, redrawn (rows slide to their new place) after each answer.
+  const itemByKey = new Map(p.items.map((it) => [it.key, it]));
+  const liveList = h('ol', { class: 'live-list' });
+  const liveSummary = h('summary', {}, 'Your ranking so far');
+  const liveEl = h('details', { class: 'live' }, liveSummary, liveList);
+  liveEl.open = !matchMedia('(max-width: 600px)').matches;
+
+  function paintConfidence() {
+    const c = progress.confidence ?? 0;
+    confFill.style.transform = `scaleX(${c})`;
+    confText.textContent = `${pct(c)}% · ${confidenceWord(c, progress.settled)}`;
+    const left = Math.max(0, (progress.target || 0) - progress.votes);
+    confHint.textContent = progress.settled
+      ? 'Your ranking has settled: more answers add very little.'
+      : progress.target > 150
+        ? `A fully settled ranking of ${p.items.length} options takes ~${progress.target} answers. Every answer still helps the crowd ranking.`
+        : left > 0
+          ? `About ${progress.target} answers settle it for ${p.items.length} options (${left} to go).`
+          : 'Close to settled. A few more answers will firm up the close calls.';
+  }
+
+  function paintLive() {
+    const rows = progress.ranking || [];
+    const before = new Map([...liveList.children].map((li) => [li.dataset.key, li.getBoundingClientRect().top]));
+    const rated = rows.filter((r) => r.score != null);
+    liveSummary.textContent = rated.length ? `Your ranking so far (${rated.length} of ${rows.length - rows.filter((r) => r.unknown).length} rated)` : 'Your ranking so far';
+    const nodes = rows.map((r) => {
+      const it = itemByKey.get(r.key);
+      const rank = r.score == null ? null : rated.indexOf(r) + 1;
+      return h('li', { class: `live-row${r.score == null ? ' unrated' : ''}`, 'data-key': r.key },
+        h('span', { class: 'no' }, rank ?? '–'),
+        chip(it),
+        h('span', { class: 'who' }, it.name),
+        r.score == null
+          ? h('span', { class: 'muted small live-note' }, r.unknown ? "don't know" : 'not rated yet')
+          : h('span', { class: 'live-bar', 'aria-hidden': 'true' }, h('i', { style: `width:${Math.round(r.score * 100)}%;background:${it.color}` })),
+        r.score != null && h('span', { class: 'live-pct' }, `${pct(r.score)}%`));
+    });
+    liveList.replaceChildren(...nodes);
+    // Slide each row from where it was to where it is now (transform only, skipped for reduced motion).
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (const li of liveList.children) {
+        const old = before.get(li.dataset.key);
+        if (old == null) continue;
+        const dy = old - li.getBoundingClientRect().top;
+        if (Math.abs(dy) > 1) li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 320, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
+      }
+    }
+  }
+
   function paintProgress() {
     const base = Math.min(progress.votes, progress.min);
     barFill.style.transform = `scaleX(${base / progress.min})`;
     count.textContent = progress.unlocked
       ? `${progress.votes} votes counted`
       : `${progress.votes} / ${progress.min} to contribute`;
+    paintConfidence();
+    paintLive();
+    liveEl.hidden = !started;
+    confEl.hidden = !started;
     if (progress.unlocked) {
       banner.replaceChildren(
         h('div', { class: 'banner' },
-          h('span', {}, justUnlocked ? 'Your votes now count. Grab your card, or keep voting to sharpen it.' : 'Keep voting to sharpen the ranking.'),
+          h('span', {}, progress.settled
+            ? 'Your ranking has settled. Grab your card, or keep going if you like.'
+            : justUnlocked ? 'Your votes now count. Grab your card, or keep voting to sharpen it.' : 'Keep voting to sharpen the ranking.'),
           h('a', { class: 'btn primary', href: `#/p/${p.slug}/results` }, 'See my card')),
       );
     } else banner.replaceChildren();
@@ -300,7 +366,7 @@ async function vote(p, prog0) {
     h('h1', {}, p.title),
     h('p', { class: 'muted' }, p.description),
     h('p', { class: 'facts' }, factsLine(p.items.length, progress.min)),
-    progressEl, banner, stage,
+    progressEl, confEl, banner, stage, liveEl,
   );
   teardown = () => window.removeEventListener('keydown', onKey);
   app.classList.toggle('is-voting', started);
@@ -354,7 +420,7 @@ async function results(p, prog) {
 
 async function card(p, me, all) {
   const link = `${location.host}/#/p/${p.slug}`;
-  const canvas = await drawCard({ poll: p, mine: me.ranking, crowd: all.ranking, link });
+  const canvas = await drawCard({ poll: p, mine: me.ranking, crowd: all.ranking, link, confidence: me.confidence });
   canvas.className = 'card-canvas';
   canvas.setAttribute('role', 'img');
   canvas.setAttribute('aria-label', `Your ranking of ${p.title} compared with the crowd`);
@@ -383,7 +449,7 @@ async function card(p, me, all) {
   }
 
   return [
-    h('p', { class: 'muted small' }, `Based on your ${me.votes} votes. Green lines: you rank it higher than the crowd does. Red: lower.`),
+    h('p', { class: 'muted small' }, `Based on your ${me.votes} votes. Your ranking is ${pct(me.confidence)}% confident (${confidenceWord(me.confidence, me.settled)}).${!me.settled && me.target > me.votes && me.target <= 150 ? ` About ${me.target - me.votes} more answers would settle it.` : ''} Green lines: you rank it higher than the crowd does. Red: lower.`),
     canvas,
     h('div', { class: 'card-actions' },
       h('button', { class: 'btn primary', onclick: download }, 'Download image'),
@@ -448,7 +514,8 @@ function everyone(data, p) {
     h('p', { class: 'stats muted small' },
       h('span', {}, `${totals.voters.toLocaleString()} voters`),
       h('span', {}, `${totals.votes.toLocaleString()} votes`),
-      h('span', {}, `${pct(totals.tieRate)}% ties`)),
+      h('span', {}, `${pct(totals.tieRate)}% ties`),
+      h('span', {}, `crowd ranking ${pct(totals.confidence)}% confident`)),
     sparse && h('div', { class: 'notice small' }, 'Still early: with this few votes the order can change a lot. The shaded ranges show how much.'),
     list,
     h('h2', {}, 'Head to head'),
@@ -467,14 +534,14 @@ function everyone(data, p) {
 function you(data) {
   const scale = { min: 0, max: 1 };
   return [
-    h('p', { class: 'muted small' }, `Based on your ${data.votes} votes. A tie counts as half a win.`),
+    h('p', { class: 'muted small' }, `Based on your ${data.votes} votes, ${pct(data.confidence)}% confident (${confidenceWord(data.confidence, data.settled)}). A tie counts as half a win.`),
     h('ol', { class: 'rank-list' }, data.ranking.map((r, i) =>
       h('li', { class: 'rank-row' },
         h('span', { class: 'no' }, r.score == null ? '–' : i + 1),
         chip(r),
         h('div', { class: 'who' }, h('b', {}, r.name), h('span', {}, r.native)),
         r.score == null ? h('div', { class: 'muted small' }, r.unknown ? "You don't know this one" : 'Not matched up yet') : meter(r, null, null, scale),
-        r.score != null && h('div', { class: 'meter-label' }, `${pct(r.score)}% of points over ${r.games} matchups`)))),
+        r.score != null && h('div', { class: 'meter-label' }, `${pct(r.score)}% chance to beat a random other option · ${r.games} matchups`)))),
   ];
 }
 
