@@ -1,0 +1,22 @@
+{
+  "slug": "pizza-toppings",
+  "sort": 2,
+  "title": "Pizza toppings",
+  "question": "Which topping belongs on a pizza more?",
+  "description": "Twelve toppings, one very serious argument. Yes, pineapple is on the list.",
+  "min_votes": 10,
+  "items": [
+    { "key": "pineapple", "short": "🍍", "name": "Pineapple",     "native": "", "color": "#F6D55C" },
+    { "key": "pepperoni", "short": "🍕", "name": "Pepperoni",     "native": "", "color": "#EF8354" },
+    { "key": "mushrooms", "short": "🍄", "name": "Mushrooms",     "native": "", "color": "#D9C5B2" },
+    { "key": "onions",    "short": "🧅", "name": "Onions",        "native": "", "color": "#E8C5E5" },
+    { "key": "peppers",   "short": "🫑", "name": "Green peppers", "native": "", "color": "#A7D676" },
+    { "key": "olives",    "short": "🫒", "name": "Olives",        "native": "", "color": "#B7C48E" },
+    { "key": "cheese",    "short": "🧀", "name": "Extra cheese",  "native": "", "color": "#FFD166" },
+    { "key": "bacon",     "short": "🥓", "name": "Bacon",         "native": "", "color": "#F28482" },
+    { "key": "jalapeno",  "short": "🌶️", "name": "Jalapeños",     "native": "", "color": "#84A98C" },
+    { "key": "anchovies", "short": "🐟", "name": "Anchovies",     "native": "", "color": "#8ECAE6" },
+    { "key": "sausage",   "short": "🌭", "name": "Sausage",       "native": "", "color": "#E5989B" },
+    { "key": "basil",     "short": "🌿", "name": "Fresh basil",   "native": "", "color": "#95D5B2" }
+  ]
+}

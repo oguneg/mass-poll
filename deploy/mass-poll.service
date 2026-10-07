@@ -1,0 +1,23 @@
+[Unit]
+Description=Mass Poll
+After=network.target
+
+[Service]
+Type=simple
+User=masspoll
+Group=masspoll
+WorkingDirectory=/opt/mass-poll
+EnvironmentFile=/etc/mass-poll.env
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning server/index.js
+Restart=on-failure
+RestartSec=3
+
+# Lock it down: it only needs to read its own code and write its database.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/mass-poll
+
+[Install]
+WantedBy=multi-user.target

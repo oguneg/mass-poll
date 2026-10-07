@@ -1,0 +1,26 @@
+{
+  "slug": "breaking-bad-universe",
+  "sort": 1,
+  "title": "Breaking Bad & Better Call Saul",
+  "question": "Which character do you like more?",
+  "description": "Sixteen characters from Albuquerque. Say my name... or at least pick a side.",
+  "min_votes": 10,
+  "items": [
+    { "key": "walter", "short": "W",  "name": "Walter White",      "native": "Breaking Bad",                    "color": "#5B8C5A" },
+    { "key": "jesse",  "short": "J",  "name": "Jesse Pinkman",     "native": "Breaking Bad",                    "color": "#E4572E" },
+    { "key": "skyler", "short": "Sk", "name": "Skyler White",      "native": "Breaking Bad",                    "color": "#7B6CF6" },
+    { "key": "hank",   "short": "H",  "name": "Hank Schrader",     "native": "Breaking Bad",                    "color": "#B08968" },
+    { "key": "marie",  "short": "M",  "name": "Marie Schrader",    "native": "Breaking Bad",                    "color": "#B83B9E" },
+    { "key": "flynn",  "short": "WJ", "name": "Walter Jr.",        "native": "Breaking Bad",                    "color": "#F2A541" },
+    { "key": "saul",   "short": "S",  "name": "Saul Goodman",      "native": "Better Call Saul · Breaking Bad", "color": "#D62839" },
+    { "key": "gus",    "short": "G",  "name": "Gus Fring",         "native": "Better Call Saul · Breaking Bad", "color": "#E9C46A" },
+    { "key": "mike",   "short": "Mi", "name": "Mike Ehrmantraut",  "native": "Better Call Saul · Breaking Bad", "color": "#6C757D" },
+    { "key": "kim",    "short": "K",  "name": "Kim Wexler",        "native": "Better Call Saul",                "color": "#2A9D8F" },
+    { "key": "chuck",  "short": "C",  "name": "Chuck McGill",      "native": "Better Call Saul",                "color": "#3D5A80" },
+    { "key": "howard", "short": "Ho", "name": "Howard Hamlin",     "native": "Better Call Saul",                "color": "#8D99AE" },
+    { "key": "nacho",  "short": "N",  "name": "Nacho Varga",       "native": "Better Call Saul",                "color": "#9C6644" },
+    { "key": "lalo",   "short": "La", "name": "Lalo Salamanca",    "native": "Better Call Saul",                "color": "#C1121F" },
+    { "key": "hector", "short": "He", "name": "Hector Salamanca",  "native": "Better Call Saul · Breaking Bad", "color": "#4D4D4D" },
+    { "key": "tuco",   "short": "T",  "name": "Tuco Salamanca",    "native": "Better Call Saul · Breaking Bad", "color": "#A68A64" }
+  ]
+}

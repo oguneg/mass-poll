@@ -1,0 +1,22 @@
+{
+  "slug": "programming-languages",
+  "sort": 3,
+  "title": "Programming languages",
+  "question": "Which language would you rather work in?",
+  "description": "Twelve languages, no flame wars (okay, a few).",
+  "min_votes": 10,
+  "items": [
+    { "key": "python",     "short": "Py",  "name": "Python",     "native": "", "color": "#3776AB" },
+    { "key": "javascript", "short": "JS",  "name": "JavaScript", "native": "", "color": "#F7DF1E" },
+    { "key": "typescript", "short": "TS",  "name": "TypeScript", "native": "", "color": "#3178C6" },
+    { "key": "rust",       "short": "Rs",  "name": "Rust",       "native": "", "color": "#CE4A1B" },
+    { "key": "go",         "short": "Go",  "name": "Go",         "native": "", "color": "#00ADD8" },
+    { "key": "java",       "short": "Jv",  "name": "Java",       "native": "", "color": "#E76F00" },
+    { "key": "csharp",     "short": "C#",  "name": "C#",         "native": "", "color": "#68217A" },
+    { "key": "cpp",        "short": "C++", "name": "C++",        "native": "", "color": "#00599C" },
+    { "key": "php",        "short": "PHP", "name": "PHP",        "native": "", "color": "#777BB4" },
+    { "key": "ruby",       "short": "Rb",  "name": "Ruby",       "native": "", "color": "#CC342D" },
+    { "key": "kotlin",     "short": "Kt",  "name": "Kotlin",     "native": "", "color": "#7F52FF" },
+    { "key": "swift",      "short": "Sw",  "name": "Swift",      "native": "", "color": "#F05138" }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "mass-poll",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "League-style mass polling: many quick head-to-head votes, ranked with Bradley-Terry.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning server/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test",
+    "fake-votes": "node --disable-warning=ExperimentalWarning scripts/fake-votes.js",
+    "backup": "node --disable-warning=ExperimentalWarning scripts/backup.js"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "slug": "sweden-parties",
+  "title": "Sweden's eight parties",
+  "question": "Which party do you prefer?",
+  "description": "The eight parties in the Swedish Riksdag, head to head. A just-for-fun poll, not a representative opinion survey.",
+  "min_votes": 10,
+  "items": [
+    {
+      "key": "s",
+      "short": "S",
+      "name": "Social Democrats",
+      "native": "Socialdemokraterna",
+      "color": "#E8112D"
+    },
+    {
+      "key": "sd",
+      "short": "SD",
+      "name": "Sweden Democrats",
+      "native": "Sverigedemokraterna",
+      "color": "#E3B505",
+      "image": "/img/sweden-parties/sd.svg"
+    },
+    {
+      "key": "m",
+      "short": "M",
+      "name": "Moderate Party",
+      "native": "Moderaterna",
+      "color": "#52BDEC",
+      "image": "/img/sweden-parties/m.png"
+    },
+    {
+      "key": "v",
+      "short": "V",
+      "name": "Left Party",
+      "native": "Vänsterpartiet",
+      "color": "#AF0000",
+      "image": "/img/sweden-parties/v.svg"
+    },
+    {
+      "key": "c",
+      "short": "C",
+      "name": "Centre Party",
+      "native": "Centerpartiet",
+      "color": "#009933",
+      "image": "/img/sweden-parties/c.svg"
+    },
+    {
+      "key": "kd",
+      "short": "KD",
+      "name": "Christian Democrats",
+      "native": "Kristdemokraterna",
+      "color": "#1E2E7A",
+      "image": "/img/sweden-parties/kd.svg"
+    },
+    {
+      "key": "mp",
+      "short": "MP",
+      "name": "Green Party",
+      "native": "Miljöpartiet",
+      "color": "#83CF39"
+    },
+    {
+      "key": "l",
+      "short": "L",
+      "name": "Liberals",
+      "native": "Liberalerna",
+      "color": "#006AB3",
+      "image": "/img/sweden-parties/l.svg"
+    }
+  ],
+  "sort": 0,
+  "footnote": "Logos: Wikimedia Commons, public domain. The Social Democrats' and Green Party's logos aren't freely licensed, so they're shown as colour tiles."
+}

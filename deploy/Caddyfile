@@ -1,0 +1,6 @@
+# Caddy: automatic HTTPS, so this is all you need for poll.ogun.se.
+poll.ogun.se {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+	header Strict-Transport-Security "max-age=31536000"
+}
