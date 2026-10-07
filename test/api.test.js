@@ -37,7 +37,7 @@ test('the Sweden poll is seeded with eight parties', async () => {
   assert.equal(poll.body.poll.items.length, 8);
   assert.ok(poll.body.poll.items.find((i) => i.key === 'sd').image.endsWith('sd.svg'));
   assert.equal(poll.body.poll.items.find((i) => i.key === 's').image, '');
-  assert.deepEqual(list.body.polls.map((p) => p.slug), ['sweden-parties', 'breaking-bad-universe', 'pizza-toppings', 'programming-languages']);
+  assert.deepEqual(list.body.polls.map((p) => p.slug), ['sweden-parties', 'breaking-bad-universe', 'pizza-toppings', 'programming-languages', 'pokemon-gen1', 'aoe2-civilizations', 'lol-champions']);
   assert.equal(list.body.polls[1].items, 16);
   assert.equal(list.body.polls[0].preview.length, 6);
   assert.deepEqual(poll.body.progress, { votes: 0, min: 10, unlocked: false, confidence: 0, target: 24, settled: false, ranking: poll.body.progress.ranking });
