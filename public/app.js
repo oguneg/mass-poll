@@ -6,7 +6,9 @@ const app = document.getElementById('app');
 const nav = document.getElementById('nav');
 
 const matchupsOf = (n) => (n * (n - 1)) / 2;
-const factsLine = (options, min) => `${options} options · ${matchupsOf(options)} matchups · answer ${min} to contribute`;
+// Once a voter has answered the baseline the invitation turns into a status.
+const factsLine = (options, min, contributing = false) =>
+  `${options} options · ${matchupsOf(options)} matchups · ${contributing ? 'your votes count' : `answer ${min} to contribute`}`;
 
 function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
@@ -134,13 +136,16 @@ async function home() {
   const { polls } = await api('/polls');
   mount(
     h('h1', {}, 'Settle it with many small votes'),
-    h('p', { class: 'muted' }, 'Instead of picking one favourite, you answer a quick run of head-to-head questions. Every answer sharpens the ranking.'),
-    h('div', { class: 'polls' }, polls.map((p) =>
-      h('a', { class: 'poll-card', href: `#/p/${p.slug}` },
-        h('div', { class: 'preview', 'aria-hidden': 'true' }, p.preview.map(chip)),
-        h('h3', {}, p.title),
-        h('div', { class: 'muted' }, p.description),
-        h('div', { class: 'muted small' }, `${p.items} options · ${matchupsOf(p.items)} matchups · ${p.votes.toLocaleString()} votes cast`)),
+    h('p', { class: 'lede' }, 'Instead of picking one favourite, you answer a quick run of head-to-head questions. Every answer sharpens the ranking.'),
+    h('div', { class: 'polls' }, polls.map((p, i) =>
+      h('a', { class: 'poll-row', href: `#/p/${p.slug}` },
+        h('span', { class: 'tno', 'aria-hidden': 'true' }, `T${i + 1}`),
+        h('div', { class: 'pr-main' },
+          h('h2', { class: 'pr-title' }, p.title),
+          h('p', { class: 'pr-desc' }, p.description),
+          h('div', { class: 'preview', 'aria-hidden': 'true' }, p.preview.map(chip)),
+          h('div', { class: 'pr-meta' }, `${p.items} options · ${matchupsOf(p.items)} matchups · ${p.votes.toLocaleString()} votes cast`)),
+        h('span', { class: 'go' }, 'Play')),
     )),
   );
 }
@@ -165,9 +170,12 @@ async function vote(p, prog0) {
   let justUnlocked = false;
 
   const stage = h('div');
-  const barFill = h('i');
+  const factsEl = h('p', { class: 'facts' }, factsLine(p.items.length, prog0.min, prog0.unlocked));
+  // One cell per answer needed to contribute, inked in as you answer (a scoresheet row).
+  const cells = Array.from({ length: Math.min(prog0.min, 20) }, () => h('i'));
+  const cellsEl = h('div', { class: 'cells', 'aria-hidden': 'true' }, cells);
   const count = h('span', { class: 'count' });
-  const progressEl = h('div', { class: 'progress' }, h('div', { class: 'bar' }, barFill), count);
+  const progressEl = h('div', { class: 'progress' }, cellsEl, count);
   const banner = h('div');
 
   // Live confidence meter: how sure we are of YOUR ranking, rising as you answer.
@@ -232,10 +240,11 @@ async function vote(p, prog0) {
 
   function paintProgress() {
     const base = Math.min(progress.votes, progress.min);
-    barFill.style.transform = `scaleX(${base / progress.min})`;
+    cells.forEach((cell, i) => cell.classList.toggle('on', i < Math.round((base / progress.min) * cells.length)));
     count.textContent = progress.unlocked
       ? `${progress.votes} votes counted`
       : `${progress.votes} / ${progress.min} to contribute`;
+    factsEl.textContent = factsLine(p.items.length, progress.min, progress.unlocked);
     paintConfidence();
     paintLive();
     liveEl.hidden = !started;
@@ -272,8 +281,12 @@ async function vote(p, prog0) {
   let current = null;
 
   // Show which side was picked (a / b / tie) while the answer is saved.
+  const STAMPS = { a: '1 – 0', b: '0 – 1', tie: '½ – ½' };
   function showPicked(side) {
-    if (duelEl) duelEl.dataset.picked = side;
+    if (!duelEl) return;
+    duelEl.dataset.picked = side;
+    const stamp = duelEl.querySelector('.stamp');
+    if (stamp) stamp.textContent = side ? STAMPS[side] : 'vs';
   }
 
   async function answer(a, b, winner) {
@@ -344,23 +357,25 @@ async function vote(p, prog0) {
   const backButton = () =>
     h('button', {
       class: 'btn back', onclick: undo, disabled: history.length === 0, 'aria-label': 'Undo last answer', title: 'Undo last answer (Backspace)',
-    }, '↶ Back');
+    }, 'Back');
 
   function showPair(a, b) {
     current = { a, b };
     const side = (it, other) =>
       h('div', { class: 'contender' },
         h('button', { class: 'pick', onclick: () => answer(it, other, it.key), 'aria-label': `Prefer ${it.name}` },
-          h('span', { class: 'badge', 'aria-hidden': 'true' }, '✓'),
           chip(it), h('span', { class: 'name' }, it.name), h('span', { class: 'native' }, it.native)),
-        h('button', { class: 'link-btn dk', onclick: () => dontKnow(it, a, b) }, "Don't know this one"));
-    duelEl = h('div', { class: 'duel' }, side(a, b), side(b, a));
+        h('button', { class: 'link-btn dk', onclick: () => dontKnow(it, a, b) }, "Don't know"));
+    duelEl = h('div', { class: 'duel' }, side(a, b), h('span', { class: 'stamp', 'aria-hidden': 'true' }, 'vs'), side(b, a));
     attachSwipe(duelEl, (what) => answer(a, b, what === 'a' ? a.key : what === 'b' ? b.key : 'tie'));
     stage.replaceChildren(
-      h('div', { class: 'question' }, p.question),
-      duelEl,
+      h('section', { class: 'slip', 'aria-label': 'Current matchup' },
+        h('div', { class: 'slip-head' },
+          h('span', { class: 'board' }, `Board ${progress.votes + 1}`),
+          h('span', { class: 'question' }, p.question)),
+        duelEl),
       h('div', { class: 'tie-row' }, backButton(), h('button', { class: 'btn tie', onclick: () => answer(a, b, 'tie') }, "Tie: can't separate them")),
-      h('div', { class: 'keys muted small' }, coarsePointer ? 'Tap one, or swipe: ← left · → right · ↓ tie' : '← left · → right · ↓ tie · Backspace undoes'),
+      h('div', { class: 'keys muted small' }, coarsePointer ? 'Tap one, or swipe left, right or down for a tie' : 'Keys: left arrow, right arrow, down arrow for a tie, Backspace to undo'),
       p.footnote && h('p', { class: 'muted small footnote' }, p.footnote),
     );
   }
@@ -398,7 +413,7 @@ async function vote(p, prog0) {
   mount(
     h('h1', {}, p.title),
     h('p', { class: 'muted' }, p.description),
-    h('p', { class: 'facts' }, factsLine(p.items.length, progress.min)),
+    factsEl,
     progressEl, confEl, banner, stage, liveEl, resetHolder,
   );
   teardown = () => window.removeEventListener('keydown', onKey);
@@ -445,7 +460,7 @@ async function results(p, prog) {
   mount(
     h('h1', {}, p.title),
     h('p', { class: 'muted' }, p.question),
-    h('div', { class: 'results-bar' }, tabs, h('a', { class: 'btn', href: `#/p/${p.slug}` }, '← Keep voting')),
+    h('div', { class: 'results-bar' }, tabs, h('a', { class: 'btn', href: `#/p/${p.slug}` }, 'Keep voting')),
     body,
     h('div', { class: 'reset-row' }, resetControl(p, me.votes)),
   );
@@ -483,7 +498,7 @@ async function card(p, me, all) {
   }
 
   return [
-    h('p', { class: 'muted small' }, `Based on your ${me.votes} votes. Your ranking is ${pct(me.confidence)}% confident (${confidenceWord(me.confidence, me.settled)}).${!me.settled && me.target > me.votes && me.target <= 150 ? ` About ${me.target - me.votes} more answers would settle it.` : ''} Green lines: you rank it higher than the crowd does. Red: lower.`),
+    h('p', { class: 'muted small' }, `Based on your ${me.votes} votes. Your ranking is ${pct(me.confidence)}% confident (${confidenceWord(me.confidence, me.settled)}).${!me.settled && me.target > me.votes && me.target <= 150 ? ` About ${me.target - me.votes} more answers would settle it.` : ''} Solid lines: you rank it higher than the crowd does. Dashed: lower.`),
     canvas,
     h('div', { class: 'card-actions' },
       h('button', { class: 'btn primary', onclick: download }, 'Download image'),
@@ -532,15 +547,15 @@ function everyone(data, p) {
     pairMap.set(`${x.b}|${x.a}`, { share: (x.bWins + x.ties / 2) / x.n, n: x.n });
   }
   const matrix = h('table', { class: 'matrix' },
-    h('thead', {}, h('tr', {}, h('th'), ranking.map((c) => h('th', {}, c.short)))),
+    h('thead', {}, h('tr', {}, h('th'), ranking.map((c) => h('th', { scope: 'col', title: c.name, 'aria-label': c.name }, c.short)))),
     h('tbody', {}, ranking.map((r) =>
-      h('tr', {}, h('th', {}, r.short), ranking.map((c) => {
+      h('tr', {}, h('th', { scope: 'row', title: r.name, 'aria-label': r.name }, r.short), ranking.map((c) => {
         if (c.key === r.key) return h('td', { class: 'self' });
         const cell = pairMap.get(`${r.key}|${c.key}`);
         if (!cell) return h('td', { class: 'muted' }, '–');
         const edge = Math.min(0.6, Math.abs(cell.share - 0.5) * 2);
-        const rgb = cell.share >= 0.5 ? 'var(--win)' : 'var(--lose)';
-        return h('td', { style: `background:rgba(${rgb},${edge})`, title: `${r.name} vs ${c.name}: ${pct(cell.share)}% over ${cell.n} votes` },
+        const tint = cell.share >= 0.5 ? `background:rgba(var(--mark-rgb),${0.25 + edge})` : '';
+        return h('td', { style: tint, title: `${r.name} vs ${c.name}: ${pct(cell.share)}% over ${cell.n} votes` },
           `${pct(cell.share)}`, h('small', {}, `n=${cell.n}`));
       })))));
 
@@ -553,8 +568,10 @@ function everyone(data, p) {
     sparse && h('div', { class: 'notice small' }, 'Still early: with this few votes the order can change a lot. The shaded ranges show how much.'),
     list,
     h('h2', {}, 'Head to head'),
-    h('p', { class: 'muted small' }, 'Each cell is how often the row beat the column, in percent. Green means the row usually wins.'),
+    h('p', { class: 'muted small' }, 'Each cell is how often the row beat the column, in percent. Yellow means the row usually wins.'),
     h('div', { class: 'matrix-wrap' }, matrix),
+    // Printed key: the headers are initials or emoji, and a phone has no hover to reveal the names.
+    h('p', { class: 'matrix-key' }, ranking.map((r) => h('span', {}, `${r.short} ${r.name}`))),
     cycles.length > 0 && [
       h('h2', {}, 'No single "best"?'),
       h('p', { class: 'muted small' }, 'These trios beat each other in a circle, so the crowd doesn\'t have one clear order among them:'),

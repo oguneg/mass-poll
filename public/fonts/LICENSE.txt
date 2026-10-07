@@ -1,0 +1,7 @@
+Fonts in this folder are self-hosted, unmodified web subsets (latin) of:
+
+  Barlow and Barlow Condensed  - Copyright The Barlow Project Authors (https://github.com/jpt/barlow)
+  JetBrains Mono               - Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
+
+All are licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org
+Obtained from the Fontsource distribution (https://fontsource.org) via cdn.jsdelivr.net on 2026-10-08.

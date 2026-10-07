@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T00:00:00Z",
+  "title": "Design System: Mass Poll",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f3f4f5", "tonalRamp": ["#1d1f20", "#38393a", "#545657", "#707273", "#929495", "#b4b6b7", "#d6d8d9", "#f3f4f5"] },
+      "sheet": { "role": "neutral", "displayName": "White Sheet", "canonical": "#ffffff", "tonalRamp": ["#222222", "#444444", "#666666", "#888888", "#aaaaaa", "#cccccc", "#e6e6e6", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Black Ink", "canonical": "#101216", "tonalRamp": ["#101216", "#252a31", "#3a414c", "#505968", "#6c7685", "#8e97a4", "#b6bcc5", "#dfe2e6"] },
+      "ink-2": { "role": "neutral", "displayName": "Pencil Grey", "canonical": "#4a515b", "tonalRamp": ["#1c2026", "#2b3037", "#3a4048", "#4a515b", "#656d78", "#868d97", "#aab0b8", "#d0d4d9"] },
+      "hair": { "role": "neutral", "displayName": "Hairline", "canonical": "rgba(16, 18, 22, 0.16)", "tonalRamp": ["rgba(16,18,22,0.9)", "rgba(16,18,22,0.7)", "rgba(16,18,22,0.5)", "rgba(16,18,22,0.35)", "rgba(16,18,22,0.25)", "rgba(16,18,22,0.16)", "rgba(16,18,22,0.08)", "rgba(16,18,22,0.04)"] },
+      "mark": { "role": "primary", "displayName": "Canary Marker", "canonical": "#ffd52e", "tonalRamp": ["#4d3e00", "#7a6200", "#a68500", "#d1aa00", "#ffd52e", "#ffe070", "#ffeba3", "#fff6d1"] },
+      "pen": { "role": "secondary", "displayName": "Correction Pen", "canonical": "#c9223a", "tonalRamp": ["#4a0c15", "#730f20", "#99162b", "#c9223a", "#e25268", "#ee8494", "#f5b3bd", "#fbdde1"] },
+      "paper-dark": { "role": "neutral", "displayName": "Scoreboard Slate", "canonical": "#111316", "tonalRamp": ["#111316", "#1b1e23", "#262a30", "#34393f", "#4b5158", "#6a7078", "#9298a0", "#c4c8cd"] },
+      "sheet-dark": { "role": "neutral", "displayName": "Graphite Sheet", "canonical": "#1b1e23", "tonalRamp": ["#111316", "#1b1e23", "#262a30", "#34393f", "#4b5158", "#6a7078", "#9298a0", "#c4c8cd"] },
+      "ink-dark": { "role": "neutral", "displayName": "Chalk Ink", "canonical": "#f1f2f4", "tonalRamp": ["#6f747b", "#8a8f96", "#a5aab0", "#bcc0c5", "#cfd2d6", "#e0e2e5", "#f1f2f4", "#fafafb"] },
+      "ink-2-dark": { "role": "neutral", "displayName": "Chalk Grey", "canonical": "#a5acb6", "tonalRamp": ["#4a515b", "#5f6670", "#757c87", "#8b929d", "#a5acb6", "#bcc1c9", "#d2d6db", "#e8eaed"] },
+      "hair-dark": { "role": "neutral", "displayName": "Chalk Hairline", "canonical": "rgba(241, 242, 244, 0.18)", "tonalRamp": ["rgba(241,242,244,0.04)", "rgba(241,242,244,0.08)", "rgba(241,242,244,0.12)", "rgba(241,242,244,0.18)", "rgba(241,242,244,0.25)", "rgba(241,242,244,0.35)", "rgba(241,242,244,0.5)", "rgba(241,242,244,0.7)"] },
+      "pen-dark": { "role": "secondary", "displayName": "Chalk Correction", "canonical": "#ff7385", "tonalRamp": ["#5a1a24", "#802636", "#a8334a", "#d4485d", "#ff7385", "#ff94a2", "#ffb5bf", "#ffd8de"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page h1, poll title. Barlow Condensed 800 uppercase." },
+      "headline": { "displayName": "Headline", "purpose": "h2 section heads, buttons, tabs, nav. Barlow Condensed 800 uppercase." },
+      "title": { "displayName": "Title", "purpose": "Poll row titles, contender names, slip question." },
+      "body": { "displayName": "Body", "purpose": "Prose and descriptions, Barlow 500, max 68ch." },
+      "label": { "displayName": "Label", "purpose": "Meta lines, hints, legends, footers in JetBrains Mono 500, uppercase." },
+      "data": { "displayName": "Data", "purpose": "Board numbers, ranks, counts, percentages, result stamp in JetBrains Mono 800." }
+    },
+    "shadows": [
+      { "name": "slip-lift", "value": "0 14px 26px -18px rgba(0, 0, 0, 0.55)", "purpose": "The only shadow: soft lift under the yellow pairing slip." },
+      { "name": "chip-ring", "value": "inset 0 0 0 2px #101216", "purpose": "Inset ink ring around item tiles (an outline, not depth)." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Stamp landing, contender lift, round cells, confidence bar fill (0.16 to 0.45s)." },
+      { "name": "button-state", "value": "background-color 0.12s, color 0.12s", "purpose": "Button hover fill. All motion disabled under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "results-collapse", "value": "560px" },
+      { "name": "phone", "value": "600px" },
+      { "name": "page-max", "value": "920px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Square ruled button; hover floods with canary marker.",
+      "html": "<button class=\"ds-btn\">Back</button> <button class=\"ds-btn ds-primary\">Play</button> <button class=\"ds-btn ds-danger\">Reset</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:8px 20px;border:2px solid #101216;border-radius:2px;background:#fff;color:#101216;font:800 1.05rem/1 'Barlow Condensed','Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:background-color .12s,color .12s}.ds-btn:hover{background:#ffd52e;color:#101216}.ds-btn:focus-visible{outline:3px solid #101216;outline-offset:3px}.ds-btn:active{transform:translateY(1px)}.ds-primary{background:#101216;color:#f3f4f5}.ds-danger{background:transparent;border-color:#c9223a;color:#c9223a}.ds-danger:hover{background:#c9223a;color:#f3f4f5}"
+    },
+    {
+      "name": "Pairing Slip",
+      "kind": "custom",
+      "refersTo": "pairing-slip",
+      "description": "Yellow carbon slip holding the live duel: board tag, question, two contenders and the result stamp.",
+      "html": "<div class=\"ds-slip\"><div class=\"ds-head\"><span class=\"ds-board\">BOARD 3</span><span class=\"ds-q\">Which is better?</span></div><div class=\"ds-duel\"><div class=\"ds-c\">ALPHA</div><div class=\"ds-c\">BRAVO</div><span class=\"ds-stamp\">1-0</span></div></div>",
+      "css": ".ds-slip{background:#ffd52e;color:#101216;border:2px solid #101216;border-radius:2px;box-shadow:0 14px 26px -18px rgba(0,0,0,.55);max-width:380px}.ds-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:2px solid #101216}.ds-board{font:800 .9rem 'JetBrains Mono',monospace;background:#101216;color:#ffd52e;padding:3px 9px}.ds-q{font:800 1.2rem/1.05 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.02em}.ds-duel{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}.ds-c{background:#fff;border:2px solid #101216;border-radius:2px;padding:30px 8px 10px;text-align:center;font:800 1.4rem/1 'Barlow Condensed',sans-serif}.ds-c:hover{outline:3px solid #101216;outline-offset:-1px}.ds-stamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-5deg);background:#101216;color:#ffd52e;border:3px solid #ffd52e;padding:8px 10px;font:800 1.05rem/1 'JetBrains Mono',monospace}"
+    },
+    {
+      "name": "Confidence Bar",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Ruled trough with yellow fill and 10% ruler ticks (functional convention).",
+      "html": "<div class=\"ds-bar\"><i></i></div>",
+      "css": ".ds-bar{position:relative;height:14px;width:260px;border:2px solid #101216;background:#fff;overflow:hidden}.ds-bar>i{display:block;width:60%;height:100%;background:#ffd52e}.ds-bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),#101216 calc(10% - 1px) 10%);opacity:.35}"
+    },
+    {
+      "name": "Poll Row",
+      "kind": "card",
+      "refersTo": "table-number",
+      "description": "Ruled home-list row: yellow table number, condensed title, mono meta, Play action.",
+      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-tno\">T1</span><span><b class=\"ds-t\">Pokemon Gen 1</b><span class=\"ds-m\">151 options</span></span><span class=\"ds-go\">Play</span></a>",
+      "css": ".ds-row{display:grid;grid-template-columns:56px 1fr auto;gap:8px 18px;align-items:center;padding:20px 0;border-top:2px solid #101216;border-bottom:1px solid rgba(16,18,22,.16);text-decoration:none;color:#101216;max-width:520px}.ds-row:hover{background:rgba(255,213,46,.16)}.ds-tno{width:56px;height:56px;display:grid;place-items:center;background:#ffd52e;border:2px solid #101216;font:800 1.15rem 'JetBrains Mono',monospace}.ds-t{display:block;font:800 1.8rem/1 'Barlow Condensed',sans-serif;text-transform:uppercase}.ds-m{display:block;margin-top:8px;font:500 .78rem 'JetBrains Mono',monospace;text-transform:uppercase;color:#4a515b}.ds-go{font:800 1.1rem 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em}"
+    },
+    {
+      "name": "Crosstable Cell",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Head-to-head matrix with hatched self cell.",
+      "html": "<table class=\"ds-matrix\"><tr><td>62%</td><td class=\"ds-self\"></td></tr><tr><td class=\"ds-self\"></td><td>38%</td></tr></table>",
+      "css": ".ds-matrix{border-collapse:collapse;border:2px solid #101216;font:500 .78rem 'JetBrains Mono',monospace}.ds-matrix td{min-width:46px;height:42px;text-align:center;border:1px solid rgba(16,18,22,.16);background:#fff}.ds-matrix td.ds-self{background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(16,18,22,.16) 5px 6px)}"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tabs-active",
+      "description": "Segmented ruled control; pressed tab is ink filled.",
+      "html": "<div class=\"ds-tabs\"><button aria-pressed=\"true\">Crowd</button><button aria-pressed=\"false\">Mine</button></div>",
+      "css": ".ds-tabs{display:inline-flex;border:2px solid #101216}.ds-tabs button{background:transparent;border:0;padding:10px 18px;min-height:46px;font:800 1.05rem 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;color:#101216}.ds-tabs button+button{border-left:2px solid #101216}.ds-tabs button[aria-pressed=true]{background:#101216;color:#f3f4f5}.ds-tabs button:focus-visible{outline:3px solid #101216;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tournament Director's Wall Chart",
+    "overview": "Mass Poll is a league of head-to-head duels, and the interface is set like the paperwork of one: a cool white sheet ruled in black ink, a single canary-yellow carbon pairing slip for the live duel, and a crimson ballpen reserved for corrections. Every answer is stamped between the two contenders as a chess-style result, and the ranking is a standings crosstable with a hatched diagonal.\n\nExact, functional, slightly stern, quick. Ink carries every fact; yellow marks the thing you act on or the winner. Corners are square (2px at most). Depth comes from rules and a single soft lift under the slip. The dark scheme is a graphite scoreboard with chalk-white ink and the same yellow.",
+    "keyCharacteristics": [
+      "Ruled, not boxed: 2px black ink rules for structure, 1px hairlines for rows.",
+      "One yellow object per screen region: the pairing slip, table numbers, the winner row, the active meter fill.",
+      "Condensed uppercase display for names and actions; monospace for every number, label and score.",
+      "Crimson means correction only.",
+      "Poll content (logos, initials, emoji) is the only imagery."
+    ],
+    "rules": [
+      { "name": "The Pen Reserve Rule", "body": "Crimson is only for corrections: danger buttons and the dashed lower-rank lines on the card. It never decorates, never signals success, never becomes a second brand color.", "section": "colors" },
+      { "name": "The Slip Stays Ink Rule", "body": "Inside the yellow slip, text and borders use literal #101216 and the contenders literal white, in both schemes.", "section": "colors" },
+      { "name": "The Share Card Is Always Light Rule", "body": "The canvas card hard-codes the light palette and ignores the dark scheme.", "section": "colors" },
+      { "name": "The Mono-For-Numbers Rule", "body": "Anything that is a count, rank, score or percentage is JetBrains Mono. Names and actions are Barlow Condensed. Prose is Barlow.", "section": "typography" },
+      { "name": "The One Lift Rule", "body": "Only the pairing slip casts a shadow, and it is soft. Hard offset shadows are not part of this world.", "section": "elevation" },
+      { "name": "The Solid Strip Rule", "body": "The pinned phone Back/Tie bar is a solid paper strip with a 2px ink top rule. Never a gradient fade.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use ink for every fact and structural rule, and Canary Marker for the single thing to act on or the winner.",
+      "Do set every count, rank, score and percentage in JetBrains Mono, and names and commands in uppercase Barlow Condensed 800.",
+      "Do keep radius at 2px or square, with 2px ink borders on objects and 1px hairlines on rows.",
+      "Do make hover on buttons a yellow fill with ink text.",
+      "Do keep emoji strictly as poll content (item tiles), never as interface icons; draw interface glyphs in CSS.",
+      "Do keep the two repeating gradients: the hatched self-cell on the crosstable and the 10% ruler ticks on the confidence bar.",
+      "Do keep the home header as the plain brand and nav, with no label beside the title.",
+      "Do print location.host in the share card footer.",
+      "Do pin the phone Back/Tie bar as a solid paper strip with a 2px ink top rule."
+    ],
+    "donts": [
+      "Don't use crimson for anything but corrections (danger buttons, the dashed lower-rank card lines).",
+      "Don't add hard offset shadows; the only shadow is the soft lift under the pairing slip.",
+      "Don't fade the pinned phone bar with a gradient.",
+      "Don't add kickers, eyebrow labels or decorative tags beside titles.",
+      "Don't use rounded white cards, soft shadows, or pill buttons; this world refuses them.",
+      "Don't use gradients for decoration; the two repeating-gradient uses are the only ones allowed.",
+      "Don't render the share card in the dark scheme or rely on system fonts for its text."
+    ]
+  }
+}

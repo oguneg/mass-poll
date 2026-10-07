@@ -5,3 +5,5 @@ data/
 .env*
 .claude/
 !.env.example
+.impeccable/review/
+.impeccable/build/

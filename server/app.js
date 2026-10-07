@@ -21,6 +21,7 @@ const MIME = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml',
 };
@@ -317,7 +318,7 @@ export function createApp({
       const data = await readFile(file);
       res.writeHead(200, {
         'content-type': MIME[extname(file)] || 'application/octet-stream',
-        'cache-control': url.pathname.startsWith('/img/') ? 'public, max-age=86400' : 'no-cache',
+        'cache-control': url.pathname.startsWith('/fonts/') ? 'public, max-age=2592000' : url.pathname.startsWith('/img/') ? 'public, max-age=86400' : 'no-cache',
       });
       res.end(req.method === 'HEAD' ? undefined : data);
     } catch {
