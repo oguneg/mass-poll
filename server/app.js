@@ -251,6 +251,21 @@ export function createApp({
       return json(res, 200, { progress: progress(poll, voterId) });
     }
 
+    // Wipe this voter's answers (and "don't know" marks) in this poll, and only theirs.
+    if (action === 'reset' && method === 'POST') {
+      const voterId = voterFor(req, res);
+      db.exec('BEGIN');
+      try {
+        db.prepare('DELETE FROM votes WHERE poll_id = ? AND voter_id = ?').run(poll.id, voterId);
+        db.prepare('DELETE FROM unknowns WHERE poll_id = ? AND voter_id = ?').run(poll.id, voterId);
+        db.exec('COMMIT');
+      } catch (e) {
+        db.exec('ROLLBACK');
+        throw e;
+      }
+      return json(res, 200, { progress: progress(poll, voterId) });
+    }
+
     if (action === 'unknown' && method === 'DELETE') {
       const voterId = voterFor(req, res);
       const body = await readJson(req);

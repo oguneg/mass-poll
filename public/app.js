@@ -92,6 +92,33 @@ function attachSwipe(el, onChoose) {
   }, true);
 }
 
+// "Reset my votes": two steps so it can't be hit by accident. Only this voter's answers in this poll go.
+function resetControl(p, votes) {
+  const box = h('div', { class: 'reset' });
+  const idle = () => box.replaceChildren(h('button', { class: 'link-btn', onclick: ask }, 'Reset my votes'));
+  const ask = () =>
+    box.replaceChildren(
+      h('span', { class: 'small' }, `Delete your ${votes} answer${votes === 1 ? '' : 's'} in this poll and start over?`),
+      h('button', { class: 'btn danger', onclick: go }, 'Yes, reset'),
+      h('button', { class: 'btn', onclick: idle }, 'Cancel'),
+    );
+  const go = async () => {
+    box.replaceChildren(h('span', { class: 'muted small' }, 'Resetting…'));
+    try {
+      await api(`/polls/${p.slug}/reset`, { method: 'POST', body: {} });
+      if (location.hash === `#/p/${p.slug}`) await route();
+      else location.hash = `#/p/${p.slug}`;
+    } catch {
+      box.replaceChildren(
+        h('span', { class: 'small' }, "Couldn't reset. Try again."),
+        h('button', { class: 'btn', onclick: idle }, 'OK'),
+      );
+    }
+  };
+  idle();
+  return box;
+}
+
 let teardown = null;
 function mount(...nodes) {
   app.classList.remove('is-voting');
@@ -157,6 +184,7 @@ async function vote(p, prog0) {
   const liveList = h('ol', { class: 'live-list' });
   const liveSummary = h('summary', {}, 'Your ranking so far');
   const liveEl = h('details', { class: 'live' }, liveSummary, liveList);
+  const resetHolder = h('div', { class: 'reset-row' });
   liveEl.open = !matchMedia('(max-width: 600px)').matches;
 
   function paintConfidence() {
@@ -212,6 +240,11 @@ async function vote(p, prog0) {
     paintLive();
     liveEl.hidden = !started;
     confEl.hidden = !started;
+    // Offer a reset once there is something to reset (rebuilt only when the vote count changes).
+    if (resetHolder.dataset.votes !== String(progress.votes)) {
+      resetHolder.dataset.votes = String(progress.votes);
+      resetHolder.replaceChildren(...(progress.votes > 0 ? [resetControl(p, progress.votes)] : []));
+    }
     if (progress.unlocked) {
       banner.replaceChildren(
         h('div', { class: 'banner' },
@@ -366,7 +399,7 @@ async function vote(p, prog0) {
     h('h1', {}, p.title),
     h('p', { class: 'muted' }, p.description),
     h('p', { class: 'facts' }, factsLine(p.items.length, progress.min)),
-    progressEl, confEl, banner, stage, liveEl,
+    progressEl, confEl, banner, stage, liveEl, resetHolder,
   );
   teardown = () => window.removeEventListener('keydown', onKey);
   app.classList.toggle('is-voting', started);
@@ -414,6 +447,7 @@ async function results(p, prog) {
     h('p', { class: 'muted' }, p.question),
     h('div', { class: 'results-bar' }, tabs, h('a', { class: 'btn', href: `#/p/${p.slug}` }, '← Keep voting')),
     body,
+    h('div', { class: 'reset-row' }, resetControl(p, me.votes)),
   );
   paint();
 }

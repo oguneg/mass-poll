@@ -132,3 +132,23 @@ test('a voter can undo their last vote and a "don\'t know"', async () => {
   await c('DELETE', `${SLUG}/unknown`, { item: pair[0].key });
   assert.deepEqual((await c('GET', SLUG)).body.unknown, []);
 });
+
+test('a voter can reset their own votes without touching anyone else\'s', async () => {
+  const me = client();
+  const other = client();
+  for (const c of [me, other]) {
+    await c('GET', SLUG);
+    for (let k = 0; k < 3; k++) {
+      const { pair } = (await c('GET', `${SLUG}/next`)).body;
+      await c('POST', `${SLUG}/votes`, { a: pair[0].key, b: pair[1].key, winner: pair[0].key });
+    }
+  }
+  const { pair } = (await me('GET', `${SLUG}/next`)).body;
+  await me('POST', `${SLUG}/unknown`, { item: pair[0].key });
+
+  const res = await me('POST', `${SLUG}/reset`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.progress.votes, 0);
+  assert.deepEqual((await me('GET', SLUG)).body.unknown, []);
+  assert.equal((await other('GET', SLUG)).body.progress.votes, 3);
+});
