@@ -1,0 +1,27 @@
+# Production: docker compose up -d --build
+# Needs a .env next to this file with DOMAIN=poll.ogun.se and IP_SALT=<long random string> (see .env.example).
+# HTTPS is handled by the server's shared Caddy proxy (~/proxy): this service joins the external "web"
+# network and declares its domain with labels.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      IP_SALT: ${IP_SALT:?Set IP_SALT in .env}
+    volumes:
+      - poll-data:/data
+    networks:
+      - web
+      - default
+    labels:
+      caddy: ${DOMAIN:?Set DOMAIN in .env}
+      caddy.reverse_proxy: "{{upstreams 3000}}"
+      caddy.encode: zstd gzip
+      caddy.header.Strict-Transport-Security: "max-age=31536000"
+
+networks:
+  web:
+    external: true
+
+volumes:
+  poll-data:

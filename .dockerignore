@@ -1,0 +1,10 @@
+.git
+.claude
+.env*
+data
+backups
+node_modules
+test
+scripts
+deploy
+*.md
